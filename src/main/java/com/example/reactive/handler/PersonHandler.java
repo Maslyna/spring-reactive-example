@@ -3,6 +3,7 @@ package com.example.reactive.handler;
 import com.example.reactive.entity.Person;
 import com.example.reactive.service.PersonService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -24,7 +25,7 @@ public class PersonHandler {
     }
 
     public Mono<ServerResponse> findAll(ServerRequest request) {
-        return ServerResponse.ok().body(service.findAll(), Person.class);
+        return ServerResponse.ok().body(service.getPage(PageRequest.of(0, 10)), Person.class);
     }
 
     public Mono<ServerResponse> findById(ServerRequest request) {

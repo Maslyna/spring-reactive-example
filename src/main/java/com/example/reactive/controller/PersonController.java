@@ -3,6 +3,8 @@ package com.example.reactive.controller;
 import com.example.reactive.entity.Person;
 import com.example.reactive.service.PersonService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -29,8 +31,8 @@ public class PersonController {
     }
 
     @GetMapping
-    public Flux<Person> findAll() {
-        return service.findAll();
+    public Mono<Page<Person>> findAll() {
+        return service.getPage(PageRequest.of(0, 10));
     }
 
     @GetMapping("/{id}")

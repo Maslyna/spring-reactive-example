@@ -7,6 +7,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import reactor.core.publisher.Mono;
 import reactor.util.Logger;
 
@@ -19,20 +20,5 @@ public class SpringReactiveTestApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(SpringReactiveTestApplication.class, args);
-    }
-
-    @Bean
-    public CommandLineRunner commandLineRunner(PersonService service) {
-        return args -> {
-            for (int i = 0; i < 100; i++) {
-                service.save(
-                        Person.builder()
-                                .firstname("firstname %d".formatted(i))
-                                .lastname("lastname %d".formatted(i))
-                                .age(i)
-                                .build()
-                ).log().subscribe();
-            }
-        };
     }
 }
