@@ -18,7 +18,7 @@ import java.util.UUID;
 @Builder
 @ToString
 @Table(name = "t_persons")
-public class Person implements UserDetails {
+public class Account implements UserDetails {
     @Id
     private UUID id;
     private String username;

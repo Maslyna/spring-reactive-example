@@ -18,6 +18,10 @@ public class GlobalServiceException extends ResponseStatusException {
         this.details.putAll(details);
     }
 
+    public GlobalServiceException(HttpStatusCode status, String reason, Throwable cause) {
+        super(status, reason, cause);
+    }
+
     public GlobalServiceException(HttpStatusCode status, String reason) {
         super(status, reason);
     }

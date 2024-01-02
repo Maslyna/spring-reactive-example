@@ -2,7 +2,6 @@ package com.example.reactive.exception.handler;
 
 import com.example.reactive.exception.GlobalServiceException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -19,6 +18,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 e.getReason() != null ? e.getReason() : e.getMessage()
         );
         problemDetail.setTitle("error");
+        problemDetail.setProperties(e.details);
         return problemDetail;
     }
 }

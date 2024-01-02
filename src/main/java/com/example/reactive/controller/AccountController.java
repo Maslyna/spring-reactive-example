@@ -1,12 +1,11 @@
 package com.example.reactive.controller;
 
-import com.example.reactive.entity.Person;
-import com.example.reactive.service.PersonService;
+import com.example.reactive.entity.Account;
+import com.example.reactive.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -19,24 +18,24 @@ import java.util.UUID;
 //@RestController
 //@RequestMapping("/api/v1/persons")
 @RequiredArgsConstructor
-public class PersonController {
+public class AccountController {
 
-    private final PersonService service;
+    private final AccountService service;
 
     @PostMapping
-    public Mono<Person> createPerson(
-            @RequestBody Person person
+    public Mono<Account> createPerson(
+            @RequestBody Account account
     ) {
-        return service.save(person);
+        return service.save(account);
     }
 
     @GetMapping
-    public Mono<Page<Person>> findAll() {
+    public Mono<Page<Account>> findAll() {
         return service.getPage(PageRequest.of(0, 10));
     }
 
     @GetMapping("/{id}")
-    public Mono<Person> findById(@PathVariable("id") UUID uuid) {
+    public Mono<Account> findById(@PathVariable("id") UUID uuid) {
         return service.findById(uuid);
     }
 }
