@@ -6,15 +6,15 @@ import com.example.reactive.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.UUID;
+
+import static com.example.reactive.router.handler.HandlerUtils.extractPageRequest;
 
 @Component
 @RequiredArgsConstructor
@@ -29,12 +29,13 @@ public class AccountHandler {
     }
 
     public Mono<ServerResponse> findAll(final ServerRequest request) {
+        PageRequest pageRequest;
         try {
-            PageRequest pageRequest = extractPageRequest(request);
-            return ServerResponse.ok().body(service.getPage(pageRequest), Page.class);
+            pageRequest = extractPageRequest(request);
         } catch (Exception e) {
-            throw new GlobalServiceException(HttpStatus.BAD_REQUEST, e.getMessage());
+            throw new GlobalServiceException(HttpStatus.BAD_REQUEST, "pagination parse error", e);
         }
+        return ServerResponse.ok().body(service.getPage(pageRequest), Page.class);
     }
 
     public Mono<ServerResponse> findById(final ServerRequest request) {
@@ -42,21 +43,5 @@ public class AccountHandler {
         return service.findById(id)
                 .flatMap(person -> ServerResponse.ok().bodyValue(person))
                 .switchIfEmpty(ServerResponse.notFound().build());
-    }
-
-    private PageRequest extractPageRequest(final ServerRequest request) {
-        int page = request.queryParam("page").map(Integer::parseUnsignedInt).orElse(0);
-        int size = request.queryParam("size").map(Integer::parseUnsignedInt).orElse(5);
-
-        List<String> sortBy = request.queryParams().get("sortBy");
-        Sort.Direction direction = request.queryParam("direction")
-                .map(Sort.Direction::fromString)
-                .orElse(Sort.Direction.DESC);
-
-        if (sortBy != null && !sortBy.isEmpty()) {
-            return PageRequest.of(page, size, direction, sortBy.toArray(new String[0]));
-        } else {
-            return PageRequest.of(page, size);
-        }
     }
 }
