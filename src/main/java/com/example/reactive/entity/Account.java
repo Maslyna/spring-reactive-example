@@ -24,8 +24,8 @@ public class Account implements UserDetails {
     private String username;
     private String password;
 
-    private Role role;
-
+    @Builder.Default
+    private Role role = Role.USER;
     @Builder.Default
     private boolean accountNonExpired = true;
     @Builder.Default

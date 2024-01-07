@@ -3,6 +3,7 @@ package com.example.reactive.service;
 import com.example.reactive.entity.Account;
 import com.example.reactive.exception.GlobalServiceException;
 import com.example.reactive.repository.AccountRepository;
+import com.example.reactive.router.request.LoginRequest;
 import com.example.reactive.router.response.TokenResponse;
 import com.example.reactive.security.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
+import static org.springframework.http.HttpStatus.*;
+
 @Service
 @RequiredArgsConstructor
 public class AccountService {
@@ -26,9 +29,22 @@ public class AccountService {
     private final JwtProvider jwtProvider;
     private final R2dbcEntityTemplate template;
 
-    public Mono<Account> save(Account account) {
-        return template.insert(account);
+    public Mono<Account> save(LoginRequest request) {
+        return repository.existsByUsernameIgnoreCase(request.username())
+                .flatMap(exists -> {
+                    if (!exists) {
+                        Account account = Account.builder()
+                                .username(request.username())
+                                .password(passwordEncoder.encode(request.password()))
+                                .build();
+
+                        return template.insert(account);
+                    } else {
+                        return Mono.error(new GlobalServiceException(HttpStatus.CONFLICT, "user with this email already exists"));
+                    }
+                });
     }
+
 
     public Mono<Page<Account>> getPage(Pageable pageable) {
         return repository.findBy(pageable)
@@ -43,9 +59,9 @@ public class AccountService {
 
     public Mono<String> login(String login, String password) {
         return repository.findByUsername(login)
-                .switchIfEmpty(Mono.error(new GlobalServiceException(HttpStatus.NOT_FOUND, "User not found")))
+                .switchIfEmpty(Mono.error(new GlobalServiceException(NOT_FOUND, "User not found")))
                 .flatMap(user -> passwordEncoder.matches(password, user.getPassword())
                         ? Mono.just(jwtProvider.generateToken(user))
-                        : Mono.error(new GlobalServiceException(HttpStatus.FORBIDDEN, "Invalid password")));
+                        : Mono.error(new GlobalServiceException(FORBIDDEN, "Invalid password")));
     }
 }

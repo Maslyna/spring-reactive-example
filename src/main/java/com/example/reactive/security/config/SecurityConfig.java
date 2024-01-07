@@ -20,19 +20,23 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+import static org.springframework.http.HttpMethod.POST;
+
 @Configuration
 @EnableWebFlux
 public class SecurityConfig {
 
     @Bean
     public SecurityWebFilterChain filterChain(ServerHttpSecurity http,
-
-                                              ReactiveAuthenticationManager authenticationManager) throws Exception {
+                                              ReactiveAuthenticationManager authenticationManager
+    ) throws Exception {
         return http
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .cors(ServerHttpSecurity.CorsSpec::disable)
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .authorizeExchange(exchange -> {
+                    exchange.pathMatchers(POST, "/api/v1/account").permitAll();
                     exchange.pathMatchers("/api/v1/login").permitAll();
                     exchange.anyExchange().authenticated();
                 })

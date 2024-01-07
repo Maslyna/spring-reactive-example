@@ -1,6 +1,5 @@
 package com.example.reactive.router.handler;
 
-import com.example.reactive.entity.Account;
 import com.example.reactive.exception.GlobalServiceException;
 import com.example.reactive.router.request.LoginRequest;
 import com.example.reactive.router.response.TokenResponse;
@@ -9,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 import static com.example.reactive.router.handler.HandlerUtils.extractPageRequest;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Component
 @RequiredArgsConstructor
@@ -25,26 +26,27 @@ public class AccountHandler {
     private final AccountService service;
 
     public Mono<ServerResponse> createAccount(final ServerRequest request) {
-        return request.bodyToMono(Account.class)
+        return request.bodyToMono(LoginRequest.class)
                 .flatMap(service::save)
                 .flatMap(savedPerson -> ServerResponse.status(HttpStatus.CREATED).bodyValue(savedPerson))
-                .onErrorResume(e -> ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).bodyValue(e.getMessage()));
+                .onErrorResume(GlobalServiceException.class,
+                        e -> ServerResponse.status(e.getStatusCode()).contentType(APPLICATION_JSON).bodyValue(e.getMessage()));
     }
 
     public Mono<ServerResponse> login(final ServerRequest request) {
         return request.bodyToMono(LoginRequest.class)
-                .flatMap(loginRequest -> service.login(loginRequest.login(), loginRequest.password()))
+                .flatMap(loginRequest -> service.login(loginRequest.username(), loginRequest.password()))
                 .flatMap(token -> ServerResponse.ok().bodyValue(new TokenResponse(token)))
-                .onErrorResume(GlobalServiceException.class, e -> ServerResponse.status(e.getStatusCode()).bodyValue(e.getMessage()));
+                .onErrorResume(GlobalServiceException.class,
+                        e -> ServerResponse.status(e.getStatusCode()).contentType(APPLICATION_JSON).bodyValue(e.getMessage()));
     }
-
 
     public Mono<ServerResponse> findAll(final ServerRequest request) {
         try {
             PageRequest pageRequest = extractPageRequest(request);
             return ServerResponse.ok().body(service.getPage(pageRequest), Page.class);
         } catch (Exception e) {
-            return ServerResponse.status(HttpStatus.BAD_REQUEST).bodyValue("Pagination parse error: " + e.getMessage());
+            return ServerResponse.status(HttpStatus.BAD_REQUEST).contentType(APPLICATION_JSON).bodyValue("Pagination parse error: " + e.getMessage());
         }
     }
 
@@ -55,7 +57,7 @@ public class AccountHandler {
                     .flatMap(person -> ServerResponse.ok().bodyValue(person))
                     .switchIfEmpty(ServerResponse.notFound().build());
         } catch (IllegalArgumentException e) {
-            return ServerResponse.status(HttpStatus.BAD_REQUEST).bodyValue("Invalid UUID format: " + e.getMessage());
+            return ServerResponse.status(HttpStatus.BAD_REQUEST).contentType(APPLICATION_JSON).bodyValue("Invalid UUID format: " + e.getMessage());
         }
     }
 }

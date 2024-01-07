@@ -9,6 +9,9 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 public interface AccountRepository extends ReactiveCrudRepository<Account, UUID> {
+    Mono<Boolean> existsByUsernameIgnoreCase(String username);
+
     Mono<Account> findByUsername(String username);
     Flux<Account> findBy(Pageable pageable);
+
 }

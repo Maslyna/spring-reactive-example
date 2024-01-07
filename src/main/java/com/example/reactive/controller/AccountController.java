@@ -1,6 +1,7 @@
 package com.example.reactive.controller;
 
 import com.example.reactive.entity.Account;
+import com.example.reactive.router.request.LoginRequest;
 import com.example.reactive.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,7 +28,7 @@ public class AccountController {
 
     @PostMapping
     public Mono<Account> createPerson(
-            @RequestBody Account account
+            @RequestBody LoginRequest account
     ) {
         return service.save(account);
     }
