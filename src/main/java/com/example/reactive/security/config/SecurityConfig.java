@@ -33,7 +33,8 @@ public class SecurityConfig {
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .authorizeExchange(exchange -> {
-                    exchange.anyExchange().permitAll();
+                    exchange.pathMatchers("/api/v1/login").permitAll();
+                    exchange.anyExchange().authenticated();
                 })
                 .authenticationManager(authenticationManager)
                 .build();

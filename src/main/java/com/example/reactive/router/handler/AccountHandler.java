@@ -2,6 +2,8 @@ package com.example.reactive.router.handler;
 
 import com.example.reactive.entity.Account;
 import com.example.reactive.exception.GlobalServiceException;
+import com.example.reactive.router.request.LoginRequest;
+import com.example.reactive.router.response.TokenResponse;
 import com.example.reactive.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,23 +27,36 @@ public class AccountHandler {
     public Mono<ServerResponse> createAccount(final ServerRequest request) {
         return request.bodyToMono(Account.class)
                 .flatMap(service::save)
-                .flatMap(savedPerson -> ServerResponse.status(HttpStatus.CREATED).bodyValue(savedPerson));
+                .flatMap(savedPerson -> ServerResponse.status(HttpStatus.CREATED).bodyValue(savedPerson))
+                .onErrorResume(e -> ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).bodyValue(e.getMessage()));
     }
 
+    public Mono<ServerResponse> login(final ServerRequest request) {
+        return request.bodyToMono(LoginRequest.class)
+                .flatMap(loginRequest -> service.login(loginRequest.login(), loginRequest.password()))
+                .flatMap(token -> ServerResponse.ok().bodyValue(new TokenResponse(token)))
+                .onErrorResume(GlobalServiceException.class, e -> ServerResponse.status(e.getStatusCode()).bodyValue(e.getMessage()));
+    }
+
+
     public Mono<ServerResponse> findAll(final ServerRequest request) {
-        PageRequest pageRequest;
         try {
-            pageRequest = extractPageRequest(request);
+            PageRequest pageRequest = extractPageRequest(request);
+            return ServerResponse.ok().body(service.getPage(pageRequest), Page.class);
         } catch (Exception e) {
-            throw new GlobalServiceException(HttpStatus.BAD_REQUEST, "pagination parse error", e);
+            return ServerResponse.status(HttpStatus.BAD_REQUEST).bodyValue("Pagination parse error: " + e.getMessage());
         }
-        return ServerResponse.ok().body(service.getPage(pageRequest), Page.class);
     }
 
     public Mono<ServerResponse> findById(final ServerRequest request) {
-        UUID id = UUID.fromString(request.pathVariable("id"));
-        return service.findById(id)
-                .flatMap(person -> ServerResponse.ok().bodyValue(person))
-                .switchIfEmpty(ServerResponse.notFound().build());
+        try {
+            UUID id = UUID.fromString(request.pathVariable("id"));
+            return service.findById(id)
+                    .flatMap(person -> ServerResponse.ok().bodyValue(person))
+                    .switchIfEmpty(ServerResponse.notFound().build());
+        } catch (IllegalArgumentException e) {
+            return ServerResponse.status(HttpStatus.BAD_REQUEST).bodyValue("Invalid UUID format: " + e.getMessage());
+        }
     }
 }
+

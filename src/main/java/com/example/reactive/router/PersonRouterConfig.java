@@ -21,6 +21,7 @@ public class PersonRouterConfig {
     public RouterFunction<ServerResponse> personRoutes() {
         return RouterFunctions.route()
                 .POST("/api/v1/account", accept(APPLICATION_JSON), accountHandler::createAccount)
+                .GET("/api/v1/login", accept(APPLICATION_JSON), accountHandler::login)
                 .GET("/api/v1/account", accept(APPLICATION_JSON), accountHandler::findAll)
                 .GET("/api/v1/account/{id}", accept(APPLICATION_JSON), accountHandler::findById)
                 .build();
