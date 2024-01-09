@@ -5,7 +5,11 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.server.ServerRequest;
+import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -26,5 +30,10 @@ public final class HandlerUtils {
         } else {
             return PageRequest.of(page, size);
         }
+    }
+
+    public static Mono<ServerResponse> createResponse(HttpStatusCode status, Object bodyValue) {
+        return ServerResponse.status(status).contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(bodyValue);
     }
 }

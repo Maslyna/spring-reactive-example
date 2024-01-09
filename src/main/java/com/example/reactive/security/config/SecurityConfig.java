@@ -1,12 +1,14 @@
 package com.example.reactive.security.config;
 
 import com.example.reactive.repository.AccountRepository;
+import com.example.reactive.security.filter.JwtAuthenticationFilter;
 import com.example.reactive.security.jwt.JwtProperties;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,7 +30,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityWebFilterChain filterChain(ServerHttpSecurity http,
-                                              ReactiveAuthenticationManager authenticationManager
+                                              ReactiveAuthenticationManager authenticationManager,
+                                              JwtAuthenticationFilter authenticationFilter
     ) throws Exception {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
@@ -37,9 +40,10 @@ public class SecurityConfig {
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .authorizeExchange(exchange -> {
                     exchange.pathMatchers(POST, "/api/v1/account").permitAll();
-                    exchange.pathMatchers("/api/v1/login").permitAll();
+                    exchange.pathMatchers(POST, "/api/v1/login").permitAll();
                     exchange.anyExchange().authenticated();
                 })
+                .addFilterAt(authenticationFilter, SecurityWebFiltersOrder.HTTP_BASIC)
                 .authenticationManager(authenticationManager)
                 .build();
     }
