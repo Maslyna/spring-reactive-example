@@ -49,26 +49,17 @@ public class AccountHandler {
     }
 
     public Mono<ServerResponse> findAll(final ServerRequest request) {
-        try {
-            PageRequest pageRequest = extractPageRequest(request);
-            return ServerResponse.ok().body(service.getPage(pageRequest), Page.class);
-        } catch (Exception e) {
-            return ServerResponse.status(BAD_REQUEST).contentType(APPLICATION_JSON).bodyValue("Pagination parse error: " + e.getMessage());
-        }
+        return Mono.fromCallable(() -> extractPageRequest(request))
+                .flatMap(service::getPage)
+                .flatMap(HandlerUtils::createResponse);
     }
 
     public Mono<ServerResponse> findById(final ServerRequest request) {
-        return Mono.just(UUID.fromString(request.pathVariable("id")))
+        return Mono.fromCallable(() -> UUID.fromString(request.pathVariable("id")))
                 .flatMap(service::findById)
                 .flatMap(person -> createResponse(HttpStatus.OK, person))
-                .onErrorResume(err -> {
-                    if (err instanceof GlobalServiceException e) {
-                        return createResponse(e);
-                    } else if (err instanceof IllegalArgumentException e) {
-                        return createResponse(BAD_REQUEST, e.getMessage());
-                    }
-                    return createResponse(BAD_REQUEST, null);
-                });
+                .onErrorResume(GlobalServiceException.class, HandlerUtils::createResponse)
+                .onErrorResume(IllegalArgumentException.class, e -> createResponse(BAD_REQUEST, e));
     }
 }
 
