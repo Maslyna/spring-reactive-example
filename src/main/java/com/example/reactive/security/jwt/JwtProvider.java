@@ -70,10 +70,10 @@ public class JwtProvider {
             Jws<Claims> claims = Jwts.parser().verifyWith(this.secretKey)
                     .build().parseSignedClaims(token);
             // parseClaimsJws will check expiration date. No need do here.
-            log.info("expiration date: {}", claims.getPayload().getExpiration());
+            log.debug("expiration date: {}", claims.getPayload().getExpiration());
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            log.info("Invalid JWT token: {}", e.getMessage());
+            log.debug("Invalid JWT token: {}", e.getMessage());
             log.trace("Invalid JWT token trace.", e);
         }
         return false;

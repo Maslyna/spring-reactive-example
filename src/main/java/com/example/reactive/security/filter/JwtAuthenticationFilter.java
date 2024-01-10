@@ -1,5 +1,6 @@
 package com.example.reactive.security.filter;
 
+import com.example.reactive.exception.UserNotFoundException;
 import com.example.reactive.security.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -28,6 +29,7 @@ public class JwtAuthenticationFilter implements WebFilter {
         if (StringUtils.hasText(token) && jwtProvider.isTokenValid(token)) {
             String username = jwtProvider.getUsername(token);
             return userDetailsService.findByUsername(username)
+                    .switchIfEmpty(Mono.error(new UserNotFoundException("user not found")))
                     .map(this::authenticate)
                     .flatMap(authentication -> chain.filter(exchange)
                             .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication)));

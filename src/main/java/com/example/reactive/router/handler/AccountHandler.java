@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -15,6 +16,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
+import static com.example.reactive.router.handler.HandlerUtils.createResponse;
 import static com.example.reactive.router.handler.HandlerUtils.extractPageRequest;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CREATED;
@@ -56,14 +58,17 @@ public class AccountHandler {
     }
 
     public Mono<ServerResponse> findById(final ServerRequest request) {
-        try {
-            UUID id = UUID.fromString(request.pathVariable("id"));
-            return service.findById(id)
-                    .flatMap(person -> ServerResponse.ok().bodyValue(person))
-                    .switchIfEmpty(ServerResponse.notFound().build());
-        } catch (IllegalArgumentException e) {
-            return ServerResponse.status(BAD_REQUEST).contentType(APPLICATION_JSON).bodyValue("Invalid UUID format: " + e.getMessage());
-        }
+        return Mono.just(UUID.fromString(request.pathVariable("id")))
+                .flatMap(service::findById)
+                .flatMap(person -> createResponse(HttpStatus.OK, person))
+                .onErrorResume(err -> {
+                    if (err instanceof GlobalServiceException e) {
+                        return createResponse(e);
+                    } else if (err instanceof IllegalArgumentException e) {
+                        return createResponse(BAD_REQUEST, e.getMessage());
+                    }
+                    return createResponse(BAD_REQUEST, null);
+                });
     }
 }
 

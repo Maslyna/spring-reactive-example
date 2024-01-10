@@ -1,5 +1,6 @@
 package com.example.reactive.router.handler;
 
+import com.example.reactive.exception.GlobalServiceException;
 import com.example.reactive.utils.CollectionUtils;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -36,4 +37,9 @@ public final class HandlerUtils {
         return ServerResponse.status(status).contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(bodyValue);
     }
+
+    public static Mono<ServerResponse> createResponse(GlobalServiceException e) {
+        return createResponse(e.getStatusCode(), e.getBody());
+    }
+
 }
