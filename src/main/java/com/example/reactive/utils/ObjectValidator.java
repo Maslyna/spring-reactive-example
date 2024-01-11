@@ -1,7 +1,6 @@
 package com.example.reactive.utils;
 
 import com.example.reactive.exception.ObjectValidationException;
-import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Validated
 @Component
@@ -27,7 +25,7 @@ public class ObjectValidator {
             Map<String, Object> details = Map.of(
                     "errors",
                     errors.stream().map(err -> ErrorMessage.builder().message(err.getMessage())
-                            .invalidValue(err.getExecutableReturnValue()).build())
+                            .invalidValue(err.getInvalidValue()).build())
                             .toList()
             );
             throw new ObjectValidationException(HttpStatus.BAD_REQUEST, details);
