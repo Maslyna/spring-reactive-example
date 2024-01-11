@@ -1,15 +1,16 @@
 package com.example.reactive.router.handler;
 
 import com.example.reactive.exception.GlobalServiceException;
+import com.example.reactive.router.mapper.AccountMapper;
 import com.example.reactive.router.request.LoginRequest;
 import com.example.reactive.service.AccountService;
 import com.example.reactive.utils.ObjectValidator;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
@@ -20,21 +21,22 @@ import static com.example.reactive.router.handler.HandlerUtils.createResponse;
 import static com.example.reactive.router.handler.HandlerUtils.extractPageRequest;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+
 
 @Component
 @RequiredArgsConstructor
 public class AccountHandler {
+    private final AccountMapper mapper;
     private final AccountService service;
     private final ObjectValidator validator;
+
 
     public Mono<ServerResponse> createAccount(final ServerRequest request) {
         return request.bodyToMono(LoginRequest.class)
                 .map(validator::validate)
                 .flatMap(service::save)
-                .flatMap(savedPerson -> ServerResponse.status(CREATED).bodyValue(savedPerson))
-                .onErrorResume(GlobalServiceException.class,
-                        e -> ServerResponse.status(e.getStatusCode()).contentType(APPLICATION_JSON).bodyValue(e.getMessage()));
+                .flatMap(account -> createResponse(CREATED))
+                .onErrorResume(GlobalServiceException.class, HandlerUtils::createResponse);
     }
 
     public Mono<ServerResponse> login(final ServerRequest request) {
@@ -44,19 +46,20 @@ public class AccountHandler {
                 .flatMap(token -> ServerResponse.ok()
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                         .build())
-                .onErrorResume(GlobalServiceException.class,
-                        e -> ServerResponse.status(e.getStatusCode()).contentType(APPLICATION_JSON).bodyValue(e.getMessage()));
+                .onErrorResume(GlobalServiceException.class, HandlerUtils::createResponse);
     }
 
     public Mono<ServerResponse> findAll(final ServerRequest request) {
         return Mono.fromCallable(() -> extractPageRequest(request))
                 .flatMap(service::getPage)
+                .map(page -> page.map(mapper::accountToAccountResponse))
                 .flatMap(HandlerUtils::createResponse);
     }
 
     public Mono<ServerResponse> findById(final ServerRequest request) {
         return Mono.fromCallable(() -> UUID.fromString(request.pathVariable("id")))
                 .flatMap(service::findById)
+                .map(mapper::accountToAccountResponse)
                 .flatMap(person -> createResponse(HttpStatus.OK, person))
                 .onErrorResume(GlobalServiceException.class, HandlerUtils::createResponse)
                 .onErrorResume(IllegalArgumentException.class, e -> createResponse(BAD_REQUEST, e));

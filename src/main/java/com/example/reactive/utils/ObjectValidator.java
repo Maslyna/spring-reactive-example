@@ -3,12 +3,16 @@ package com.example.reactive.utils;
 import com.example.reactive.exception.ObjectValidationException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 
+import java.util.Map;
 import java.util.stream.Collectors;
 
+@Validated
 @Component
 @RequiredArgsConstructor
 public class ObjectValidator {
@@ -20,9 +24,20 @@ public class ObjectValidator {
         if (errors.isEmpty()) {
             return object;
         } else {
-            String errorDetails = errors.stream().map(ConstraintViolation::getMessage)
-                    .collect(Collectors.joining(", "));
-            throw new ObjectValidationException(HttpStatus.BAD_REQUEST, errorDetails);
+            Map<String, Object> details = Map.of(
+                    "errors",
+                    errors.stream().map(err -> ErrorMessage.builder().message(err.getMessage())
+                            .invalidValue(err.getExecutableReturnValue()).build())
+                            .toList()
+            );
+            throw new ObjectValidationException(HttpStatus.BAD_REQUEST, details);
         }
+    }
+
+    @Builder
+    private static record ErrorMessage(
+            String message,
+            Object invalidValue
+    ) {
     }
 }

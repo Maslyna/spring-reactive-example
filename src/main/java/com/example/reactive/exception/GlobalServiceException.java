@@ -6,6 +6,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.HashMap;
 import java.util.Map;
 
+// TODO: to response mapper
 public class GlobalServiceException extends ResponseStatusException {
     public final Map<String, Object> details = new HashMap<>();
 
