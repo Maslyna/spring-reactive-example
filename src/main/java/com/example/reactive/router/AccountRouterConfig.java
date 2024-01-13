@@ -13,7 +13,7 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 
 @Configuration
 @RequiredArgsConstructor
-public class PersonRouterConfig {
+public class AccountRouterConfig {
 
     private final AccountHandler accountHandler;
 

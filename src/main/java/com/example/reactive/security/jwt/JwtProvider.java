@@ -29,10 +29,12 @@ public class JwtProvider {
     private final SecretKey secretKey;
 
     public String generateToken(Authentication authentication) {
+        Assert.notNull(authentication, "authentication cannot be null");
         return generateToken(authentication.getName(), authentication.getAuthorities(), Map.of());
     }
 
     public String generateToken(UserDetails userDetails) {
+        Assert.notNull(userDetails, "user details cannot be null");
         return generateToken(userDetails.getUsername(), userDetails.getAuthorities(), Map.of());
     }
 

@@ -9,4 +9,4 @@ spring:
         password: ${POSTGRES_PASSWORD}
 
 security:
-    secret:
+    secretKey: 722236765770276c3c21344b6a455f3662447d3b4b7b3e2c2b707d7e3e

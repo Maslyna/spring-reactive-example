@@ -16,11 +16,11 @@ import java.util.UUID;
 
 /**
 * Functional Endpoints, that are equals to this controller look at: <br>
-* com.example.reactive.router.PersonRouterConfig
+* com.example.reactive.router.AccountRouterConfig
 */
 
 //@RestController
-//@RequestMapping("/api/v1/persons")
+//@RequestMapping("/api/v1/account")
 @RequiredArgsConstructor
 public class AccountController {
 

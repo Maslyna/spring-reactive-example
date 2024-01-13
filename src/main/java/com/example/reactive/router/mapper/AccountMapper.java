@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 public class AccountMapper {
 
     public AccountResponse accountToAccountResponse(Account account) {
+        if (account == null) {
+            return null;
+        }
         return AccountResponse.builder()
                 .userId(account.getId())
                 .username(account.getUsername())
